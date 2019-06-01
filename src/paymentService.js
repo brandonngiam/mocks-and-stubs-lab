@@ -8,7 +8,4 @@ const refundPayment = amount => {
   return `refund made for $${amount}`;
 };
 
-module.exports = {
-  makePayment,
-  refundPayment
-};
+module.exports = { makePayment, refundPayment };
