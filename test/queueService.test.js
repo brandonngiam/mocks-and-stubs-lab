@@ -9,23 +9,14 @@ beforeEach(() => {
 });
 
 describe("generateQueue", () => {
-  it("should always generate arrays of length between and inclusive of 1-9", () => {
-    for (let i = 0; i < iterations; i++) {
-      let queue = generateQueue();
-      expect(mockRandInt).toBeCalled();
-      expect(queue.length).toBeGreaterThanOrEqual(1);
-      expect(queue.length).toBeLessThanOrEqual(9);
-    }
-  });
+  it("should return random length array of elements within a range", () => {
+    mockRandInt.mockReturnValueOnce(5);
+    mockRandInt.mockReturnValueOnce(-5);
+    mockRandInt.mockReturnValueOnce(-1);
+    mockRandInt.mockReturnValueOnce(0);
+    mockRandInt.mockReturnValueOnce(1);
+    mockRandInt.mockReturnValueOnce(7);
 
-  it("given a fixed array length of 5, it should return arrays between and inclusive of -20-49", () => {
-    for (let i = 0; i < iterations * 10; i++) {
-      mockRandInt.mockImplementationOnce(() => 5);
-      let queue = generateQueue();
-      expect(mockRandInt).toBeCalled();
-      expect(queue.length).toEqual(5);
-      expect(Math.max(...queue)).toBeLessThanOrEqual(49);
-      expect(Math.min(...queue)).toBeGreaterThanOrEqual(-20);
-    }
+    expect(generateQueue()).toEqual([-5, -1, 0, 1, 7]);
   });
 });

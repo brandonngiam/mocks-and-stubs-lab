@@ -1,9 +1,10 @@
 const processPayments = require("../src/main");
-const { makePayment, refundPayment } = require("../src/paymentService");
+const paymentService = require("../src/paymentService");
 const generateQueue = require("../src/queueService");
 
 jest.mock("../src/queueService");
-jest.mock("../src/paymentService");
+const spyPayment = jest.spyOn(paymentService, "makePayment");
+const spyRefund = jest.spyOn(paymentService, "refundPayment");
 
 describe("processing Payments", () => {
   beforeEach(() => {
@@ -11,52 +12,49 @@ describe("processing Payments", () => {
   });
 
   it("does not call makePayment or refundPayment when paymentQueue is empty", () => {
-    generateQueue.mockImplementation(() => []);
+    generateQueue.mockReturnValue([]);
     processPayments();
 
-    expect(generateQueue).toHaveBeenCalledTimes(1);
-
-    expect(makePayment).toHaveBeenCalledTimes(0);
-    expect(refundPayment).toHaveBeenCalledTimes(0);
+    expect(spyPayment).not.toHaveBeenCalled();
+    expect(spyRefund).not.toHaveBeenCalled();
   });
 
   it("calls makePayment when next item in paymentQueue is positive", () => {
-    generateQueue.mockImplementation(() => [10]);
+    //test boundary condition
+    generateQueue.mockReturnValue([1]);
     processPayments();
 
-    expect(generateQueue).toHaveBeenCalledTimes(1);
-
-    expect(makePayment).toHaveBeenCalledTimes(1);
-    expect(refundPayment).toHaveBeenCalledTimes(0);
+    expect(spyPayment).toHaveBeenCalledWith(1);
+    expect(spyRefund).not.toHaveBeenCalled();
   });
 
   it("calls refundPayment when next item in paymentQueue is negative", () => {
-    generateQueue.mockImplementation(() => [-8]);
+    //test boundary condition
+    generateQueue.mockReturnValue([-1]);
     processPayments();
 
-    expect(generateQueue).toHaveBeenCalledTimes(1);
-
-    expect(makePayment).toHaveBeenCalledTimes(0);
-    expect(refundPayment).toHaveBeenCalledTimes(1);
+    expect(spyPayment).not.toHaveBeenCalled();
+    expect(spyRefund).toHaveBeenCalledWith(-1);
   });
 
   it("calls makePayment when next item in paymentQueue is zero", () => {
-    generateQueue.mockImplementation(() => [10]);
+    generateQueue.mockReturnValue([0]);
     processPayments();
 
-    expect(generateQueue).toHaveBeenCalledTimes(1);
-
-    expect(makePayment).toHaveBeenCalledTimes(1);
-    expect(refundPayment).toHaveBeenCalledTimes(0);
+    expect(spyPayment).toHaveBeenCalledWith(0);
+    expect(spyRefund).not.toHaveBeenCalled();
   });
 
   it("handles alernating sequence of positive and negatives", () => {
-    generateQueue.mockImplementation(() => [10, -5, 6, -2, 3]);
+    generateQueue.mockReturnValue([1, -1, 2, -2, 3]);
     processPayments();
 
-    expect(generateQueue).toHaveBeenCalledTimes(1);
-
-    expect(makePayment).toHaveBeenCalledTimes(3);
-    expect(refundPayment).toHaveBeenCalledTimes(2);
+    expect(spyPayment).toHaveBeenCalledTimes(3);
+    expect(spyPayment).toHaveBeenCalledWith(1);
+    expect(spyPayment).toHaveBeenCalledWith(2);
+    expect(spyPayment).toHaveBeenCalledWith(3);
+    expect(spyRefund).toHaveBeenCalledTimes(2);
+    expect(spyRefund).toHaveBeenCalledWith(-1);
+    expect(spyRefund).toHaveBeenCalledWith(-2);
   });
 });
